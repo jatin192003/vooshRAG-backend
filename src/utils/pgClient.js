@@ -6,12 +6,13 @@ dotenv.config();
 const { Pool } = pg;
 
 const pgPool = new Pool({
+    connectionString: process.env.DATABASE_URL || undefined,
     host: process.env.POSTGRES_HOST || 'localhost',
     port: process.env.POSTGRES_PORT || 5432,
     database: process.env.POSTGRES_DB || 'vooshrag',
     user: process.env.POSTGRES_USER || 'postgres',
     password: process.env.POSTGRES_PASSWORD || '',
-    ssl: process.env.POSTGRES_SSL === 'true' ? { rejectUnauthorized: false } : false,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
     max: 20,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 2000,
