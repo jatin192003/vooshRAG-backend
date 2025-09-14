@@ -9,15 +9,24 @@ const { Pool } = pg;
 let pgConfig;
 
 if (process.env.DATABASE_URL) {
+    // Check if we're on Render (or any production environment that requires SSL)
+    const isProduction = process.env.NODE_ENV === 'production' || 
+                        process.env.DATABASE_URL.includes('render.com') ||
+                        process.env.DATABASE_URL.includes('amazonaws.com') ||
+                        process.env.DATABASE_URL.includes('herokuapp.com');
+    
+    console.log('Database URL detected, isProduction:', isProduction);
+    console.log('NODE_ENV:', process.env.NODE_ENV);
+    
     // Use the connection string directly with SSL configuration
     pgConfig = {
         connectionString: process.env.DATABASE_URL,
-        ssl: process.env.NODE_ENV === 'production' ? { 
-            rejectUnauthorized: false 
+        ssl: isProduction ? { 
+            rejectUnauthorized: false  // This allows self-signed certificates
         } : false,
         max: 20,
         idleTimeoutMillis: 30000,
-        connectionTimeoutMillis: 10000, // Increased timeout
+        connectionTimeoutMillis: 10000,
     };
 } else {
     // Fallback to individual environment variables
@@ -36,7 +45,8 @@ if (process.env.DATABASE_URL) {
 
 console.log('PostgreSQL Config:', {
     ...pgConfig,
-    connectionString: pgConfig.connectionString ? '[REDACTED]' : undefined
+    connectionString: pgConfig.connectionString ? '[REDACTED]' : undefined,
+    ssl: pgConfig.ssl
 });
 
 const pgPool = new Pool(pgConfig);
@@ -46,19 +56,26 @@ pgPool.on('error', (err) => {
 });
 
 pgPool.on('connect', (client) => {
-    console.log('Connected to PostgreSQL');
+    console.log('Connected to PostgreSQL successfully');
 });
 
 // Test the connection with better error handling
 const testConnection = async () => {
     try {
+        console.log('Testing PostgreSQL connection...');
         const client = await pgPool.connect();
         const result = await client.query('SELECT NOW()');
         console.log('PostgreSQL connection test successful:', result.rows[0]);
         client.release();
     } catch (err) {
         console.error('PostgreSQL connection test failed:', err.message);
-        console.error('Full error:', err);
+        console.error('Error code:', err.code);
+        
+        // If it's still a certificate issue, try alternative SSL config
+        if (err.code === 'DEPTH_ZERO_SELF_SIGNED_CERT') {
+            console.log('Trying alternative SSL configuration...');
+            // This is handled by rejectUnauthorized: false
+        }
     }
 };
 
