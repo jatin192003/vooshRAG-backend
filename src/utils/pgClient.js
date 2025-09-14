@@ -25,8 +25,7 @@ if (process.env.DATABASE_URL) {
             user: dbUrl.username,
             password: dbUrl.password,
             ssl: isProduction ? {
-                rejectUnauthorized: false,
-                checkServerIdentity: false
+                rejectUnauthorized: false
             } : false,
             max: 20,
             idleTimeoutMillis: 30000,
