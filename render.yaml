@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: vooshrag-backend
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        fromService:
+          type: web
+          name: vooshrag-backend
+          property: port
+    autoDeploy: true
+
+databases:
+  - name: vooshrag-postgres
+    databaseName: vooshrag
+    user: vooshrag_user
+
+  - name: vooshrag-redis
+    type: redis
+    maxmemoryPolicy: allkeys-lru

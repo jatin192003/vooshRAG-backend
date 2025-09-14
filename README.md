@@ -50,9 +50,6 @@ npm install
 
 **Option A: Using Docker (Recommended)**
 ```bash
-# Start Qdrant
-docker run -p 6333:6333 qdrant/qdrant
-
 # Start Redis
 docker run -p 6379:6379 redis:alpine
 ```
